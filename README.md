@@ -116,7 +116,7 @@ File `.env` terletak di folder `chatbot-intent/ui/.env`. Variabel ini secara oto
 # Konfigurasi LLM API
 VITE_LLM_PROVIDER=Custom
 VITE_LLM_BASE_URL=https://ai.sumopod.com/v1
-VITE_LLM_API_KEY=sk-cbGqS5iKeABgFgUQicQ_sA
+VITE_LLM_API_KEY=sk-*******
 VITE_DEFAULT_MODEL=gemini-3.7-flash
 
 # Endpoint Server Rasa NLU / Core
