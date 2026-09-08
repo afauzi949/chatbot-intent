@@ -10,7 +10,7 @@ interface Props {
 const EMOJI_PRESETS = ['✦', '🏝️', '💳', '🧠', '💻', '📊', '✍️', '⚡', '🔍', '🛡️', '🎓', '🌐'];
 
 export const SkillModal: React.FC<Props> = ({ skillToEdit, onClose }) => {
-  const { addSkill, updateSkill } = useConfig();
+  const { addSkill, updateSkill, deleteSkill } = useConfig();
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('✦');
@@ -172,13 +172,40 @@ export const SkillModal: React.FC<Props> = ({ skillToEdit, onClose }) => {
             </div>
           </div>
 
-          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-secondary)', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Batal
-            </button>
-            <button type="submit" className="btn btn-primary">
-              {skillToEdit ? 'Simpan Perubahan' : 'Buat Skill'}
-            </button>
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            {skillToEdit ? (
+              <button
+                type="button"
+                className="btn"
+                style={{
+                  color: 'var(--accent-error)',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  fontSize: '0.8125rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onClick={() => {
+                  if (window.confirm(`Hapus skill "${skillToEdit.name}"?`)) {
+                    deleteSkill(skillToEdit.id);
+                    onClose();
+                  }
+                }}
+              >
+                <span>🗑</span>
+                <span>Hapus Skill</span>
+              </button>
+            ) : <div />}
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Batal
+              </button>
+              <button type="submit" className="btn btn-primary">
+                {skillToEdit ? 'Simpan Perubahan' : 'Buat Skill'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

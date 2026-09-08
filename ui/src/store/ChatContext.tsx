@@ -8,12 +8,14 @@ import type {
 import * as conversationsApi from '../lib/api/conversations';
 import * as chatApi from '../lib/api/chat';
 
+import { loadApiConfiguration } from '../lib/api/config';
+
 interface ChatContextValue {
   // Conversations
   conversations: Conversation[];
   selectedConversationId: string | null;
   selectConversation: (id: string | null) => void;
-  createConversation: (title?: string) => Promise<Conversation>;
+  createConversation: (title?: string, modelId?: string) => Promise<Conversation>;
   renameConversation: (id: string, title: string) => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
   searchQuery: string;
@@ -93,10 +95,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setSelectedConversationId(id);
   }, []);
 
-  const createConversation = useCallback(async (title?: string) => {
+  const createConversation = useCallback(async (title?: string, modelId?: string) => {
+    const fallbackModel = loadApiConfiguration().defaultModelId || 'gemini-3.7-flash';
     const conv = await conversationsApi.createConversation(
       title || 'New conversation',
-      'gemini-3.7-flash'
+      modelId || fallbackModel
     );
     await refreshConversations();
     setSelectedConversationId(conv.id);

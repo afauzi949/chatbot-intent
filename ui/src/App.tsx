@@ -17,6 +17,7 @@ const ChatApp: React.FC = () => {
     setSkillsModalOpen,
     connectorsModalOpen,
     setConnectorsModalOpen,
+    selectedModelId,
   } = useConfig();
 
   // Keyboard shortcuts
@@ -25,7 +26,7 @@ const ChatApp: React.FC = () => {
       // Ctrl/Cmd + N — New chat
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
-        createConversation();
+        createConversation(undefined, selectedModelId);
       }
 
       // Ctrl/Cmd + K — Focus search

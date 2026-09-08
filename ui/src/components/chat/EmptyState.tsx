@@ -6,34 +6,40 @@ interface Props {
   onSuggestionClick: (text: string) => void;
 }
 
-const suggestions = [
-  'Cari wisata pantai di Banggai Kepulauan',
-  'Cek transaksi dengan RRN 123456789012',
-  'Informasi rute dan penginapan Bangkep',
-  'Bantu buat dataset intent Rasa NLU',
+const defaultSuggestions = [
+  'Jelaskan konsep dasar NLP dan intent classification',
+  'Bantu review dan berikan saran perbaikan kode',
+  'Buat draf pesan profesional untuk kebutuhan kerja',
+  'Ringkas dan jelaskan poin penting dari suatu topik',
 ];
 
 export const EmptyState: React.FC<Props> = ({ onSuggestionClick }) => {
-  const { skills, selectedSkillId, setSkillsModalOpen } = useConfig();
-  const activeSkill = skills.find((s) => s.id === selectedSkillId) || skills[0];
+  const { skills, selectedSkillId, setSkillsModalOpen, models, selectedModelId } = useConfig();
+  const activeSkill = skills.find((s) => s.id === selectedSkillId) || null;
+  const currentModel = models.find((m) => m.id === selectedModelId);
 
   return (
     <div className="empty-state">
       <div className="empty-state-icon" style={{ fontSize: '2rem' }}>
-        {activeSkill?.icon || '✦'}
+        {activeSkill ? (activeSkill.icon || '✦') : '🤖'}
       </div>
       <div>
         <h1 className="empty-state-title" style={{ marginBottom: '6px' }}>
-          {activeSkill?.name || 'How can I help?'}
+          {activeSkill
+            ? activeSkill.name
+            : currentModel?.name
+            ? `Chat dengan ${currentModel.name}`
+            : 'How can I help you today?'}
         </h1>
         <p className="empty-state-subtitle">
-          {activeSkill?.description ||
-            'Ask a question, explore an idea, or start working with your AI assistant.'}
+          {activeSkill
+            ? activeSkill.description || 'Ask a question, explore an idea, or start working with your AI assistant.'
+            : 'Pesan akan langsung diteruskan ke Agent AI sesuai model yang dipilih (tanpa batasan skill).'}
         </p>
       </div>
 
       <div className="empty-state-suggestions">
-        {suggestions.map((s) => (
+        {defaultSuggestions.map((s) => (
           <button
             key={s}
             className="suggestion-chip"
