@@ -37,8 +37,8 @@ Aplikasi ini dibangun menggunakan **React 19 + TypeScript + Vite** dengan stylin
   - **Skills**: Manajemen daftar skill AI (tambah, edit, hapus, dan toggle on/off).
   - **Connectors**: Manajemen daftar remote MCP connectors dan status koneksi.
   - **Models**: Manajemen model AI dengan fitur pencarian dan reload dari Base URL.
-  - **API**: Konfigurasi Base URL, API Key, dan Rasa URL dengan fitur *Test Connection*.
   - **Interface**: Compact mode, toggle metadata pesan, dan toggle visualisasi tool.
+  *(Konfigurasi kredensial API LLM & endpoint dikelola aman melalui `.env` dan tidak diexpose di UI demi keamanan).*
 - ⌨️ **Keyboard Shortcuts**:
   - `Ctrl` / `Cmd` + `N`: Membuat percakapan baru.
   - `Ctrl` / `Cmd` + `K`: Membuka dan fokus ke pencarian percakapan.

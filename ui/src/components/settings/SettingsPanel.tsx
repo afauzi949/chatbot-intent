@@ -1,12 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import type { Skill, MCPServer } from '../../types';
 import { useConfig } from '../../store/ConfigContext';
-import { testConnection } from '../../lib/api/config';
 import { testMCPServer } from '../../lib/api/mcp';
 import { SkillModal } from '../skill/SkillModal';
 import { AddConnectorModal } from '../mcp/AddConnectorModal';
 
-type SettingsTab = 'general' | 'skills' | 'connectors' | 'models' | 'api' | 'interface';
+type SettingsTab = 'general' | 'skills' | 'connectors' | 'models' | 'interface';
 
 export const SettingsPanel: React.FC = () => {
   const {
@@ -15,7 +14,6 @@ export const SettingsPanel: React.FC = () => {
     settings,
     updateSettings,
     apiConfig,
-    saveApiConfiguration,
     models,
     toggleModelEnabled,
     modelsSource,
@@ -25,6 +23,7 @@ export const SettingsPanel: React.FC = () => {
     skills,
     toggleSkillEnabled,
     deleteSkill,
+    resetSkills,
     mcpServers,
     toggleMCPServer,
     deleteMCPServer,
@@ -47,30 +46,7 @@ export const SettingsPanel: React.FC = () => {
     }));
     setTestingConnectorId(null);
   };
-  const [localApiConfig, setLocalApiConfig] = useState(apiConfig);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
-  const [testing, setTesting] = useState(false);
   const [modelSearch, setModelSearch] = useState('');
-
-  const handleTestConnection = useCallback(async () => {
-    setTesting(true);
-    setConnectionStatus(null);
-    const result = await testConnection(localApiConfig);
-    setConnectionStatus(result);
-    setTesting(false);
-    if (result.success && localApiConfig.baseUrl) {
-      fetchModels(localApiConfig.baseUrl, localApiConfig.apiKey);
-    }
-  }, [localApiConfig, fetchModels]);
-
-  const handleSaveApi = useCallback(() => {
-    saveApiConfiguration(localApiConfig);
-    setConnectionStatus({ success: true, message: 'Configuration saved' });
-  }, [localApiConfig, saveApiConfiguration]);
 
   if (!settingsOpen) return null;
 
@@ -85,7 +61,7 @@ export const SettingsPanel: React.FC = () => {
         </div>
 
         <div className="modal-tabs">
-          {(['general', 'skills', 'models', 'api', 'interface'] as SettingsTab[]).map((t) => (
+          {(['general', 'skills', 'connectors', 'models', 'interface'] as SettingsTab[]).map((t) => (
             <button
               key={t}
               className={`modal-tab ${tab === t ? 'active' : ''}`}
@@ -142,16 +118,30 @@ export const SettingsPanel: React.FC = () => {
                     Kustomisasi instruksi dan persona AI khusus untuk berbagai kebutuhan.
                   </div>
                 </div>
-                <button
-                  className="btn btn-primary"
-                  style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                  onClick={() => {
-                    setSkillToEdit(null);
-                    setSkillModalOpen(true);
-                  }}
-                >
-                  + Tambah Skill
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.75rem', padding: '6px 10px' }}
+                    onClick={() => {
+                      if (window.confirm('Kembalikan daftar skill ke bawaan awal?')) {
+                        resetSkills();
+                      }
+                    }}
+                    title="Reset daftar skill ke bawaan awal"
+                  >
+                    ↺ Reset Default
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
+                    onClick={() => {
+                      setSkillToEdit(null);
+                      setSkillModalOpen(true);
+                    }}
+                  >
+                    + Tambah Skill
+                  </button>
+                </div>
               </div>
 
               <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
@@ -235,26 +225,24 @@ export const SettingsPanel: React.FC = () => {
                         ✎
                       </button>
 
-                      {skill.isCustom && (
-                        <button
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '0.75rem',
-                            color: 'var(--accent-error)',
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            cursor: 'pointer',
-                          }}
-                          onClick={() => {
-                            if (window.confirm(`Hapus skill "${skill.name}"?`)) {
-                              deleteSkill(skill.id);
-                            }
-                          }}
-                          title="Hapus skill"
-                        >
-                          ✕
-                        </button>
-                      )}
+                      <button
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.75rem',
+                          color: 'var(--accent-error)',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          if (window.confirm(`Hapus skill "${skill.name}"?`)) {
+                            deleteSkill(skill.id);
+                          }
+                        }}
+                        title="Hapus skill"
+                      >
+                        ✕
+                      </button>
 
                       <div
                         className={`toggle ${skill.enabled ? 'on' : ''}`}
@@ -467,116 +455,6 @@ export const SettingsPanel: React.FC = () => {
             </>
           )}
 
-          {/* API Tab */}
-          {tab === 'api' && (
-            <>
-              <div className="prototype-warning">
-                ⚠ Prototype: API configuration is stored in localStorage. Do not use
-                production credentials.
-              </div>
-
-              <div className="setting-group">
-                <label className="setting-label">Provider</label>
-                <select
-                  className="setting-select"
-                  value={localApiConfig.provider}
-                  onChange={(e) =>
-                    setLocalApiConfig({ ...localApiConfig, provider: e.target.value })
-                  }
-                >
-                  <option value="Custom">Custom</option>
-                  <option value="Google">Google AI</option>
-                  <option value="Anthropic">Anthropic</option>
-                  <option value="OpenAI">OpenAI Compatible</option>
-                </select>
-              </div>
-
-              <div className="setting-group">
-                <label className="setting-label">Base URL</label>
-                <input
-                  className="setting-input"
-                  type="url"
-                  placeholder="https://api.example.com/v1"
-                  value={localApiConfig.baseUrl}
-                  onChange={(e) =>
-                    setLocalApiConfig({ ...localApiConfig, baseUrl: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="setting-group">
-                <label className="setting-label">API Key</label>
-                <div className="password-input-wrapper">
-                  <input
-                    className="setting-input"
-                    type={showApiKey ? 'text' : 'password'}
-                    placeholder="Enter your API key"
-                    value={localApiConfig.apiKey}
-                    onChange={(e) =>
-                      setLocalApiConfig({ ...localApiConfig, apiKey: e.target.value })
-                    }
-                    style={{ paddingRight: '40px' }}
-                  />
-                  <button
-                    className="password-toggle"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                  >
-                    {showApiKey ? '🙈' : '👁'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="setting-group">
-                <label className="setting-label">Rasa Server URL</label>
-                <input
-                  className="setting-input"
-                  type="url"
-                  placeholder="http://localhost:5005"
-                  value={localApiConfig.rasaUrl || ''}
-                  onChange={(e) =>
-                    setLocalApiConfig({ ...localApiConfig, rasaUrl: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="setting-group">
-                <label className="setting-label">MCP Server URL</label>
-                <input
-                  className="setting-input"
-                  type="url"
-                  placeholder="http://localhost:8000"
-                  value={localApiConfig.mcpUrl || ''}
-                  onChange={(e) =>
-                    setLocalApiConfig({ ...localApiConfig, mcpUrl: e.target.value })
-                  }
-                />
-              </div>
-
-              {connectionStatus && (
-                <div
-                  className={`connection-status ${
-                    connectionStatus.success ? 'success' : 'error'
-                  }`}
-                >
-                  {connectionStatus.success ? '✓' : '✗'} {connectionStatus.message}
-                </div>
-              )}
-
-              <div className="btn-row">
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleTestConnection}
-                  disabled={testing}
-                >
-                  {testing ? 'Testing...' : 'Test Connection'}
-                </button>
-                <button className="btn btn-primary" onClick={handleSaveApi}>
-                  Save Configuration
-                </button>
-              </div>
-            </>
-          )}
-
           {/* Models Tab */}
           {tab === 'models' && (
             <>
@@ -603,8 +481,8 @@ export const SettingsPanel: React.FC = () => {
                   <button
                     className="btn btn-secondary"
                     style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                    onClick={() => fetchModels(localApiConfig.baseUrl, localApiConfig.apiKey)}
-                    disabled={isLoadingModels || !localApiConfig.baseUrl}
+                    onClick={() => fetchModels()}
+                    disabled={isLoadingModels || !apiConfig.baseUrl}
                   >
                     {isLoadingModels ? 'Loading...' : '↻ Reload Models'}
                   </button>

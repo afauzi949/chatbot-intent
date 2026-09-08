@@ -14,7 +14,7 @@ export const ConversationSidebar: React.FC = () => {
     searchQuery,
     setSearchQuery,
   } = useChat();
-  const { sidebarOpen, setSidebarOpen, setSettingsOpen } = useConfig();
+  const { sidebarOpen, setSidebarOpen, setSettingsOpen, selectedModelId } = useConfig();
 
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -49,12 +49,12 @@ export const ConversationSidebar: React.FC = () => {
   }, []);
 
   const handleNewChat = useCallback(() => {
-    createConversation();
+    createConversation(undefined, selectedModelId);
     // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
-  }, [createConversation, setSidebarOpen]);
+  }, [createConversation, setSidebarOpen, selectedModelId]);
 
   const handleSelect = useCallback(
     (id: string) => {

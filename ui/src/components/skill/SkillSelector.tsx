@@ -6,11 +6,11 @@ interface Props {
 }
 
 export const SkillSelector: React.FC<Props> = ({ onOpenNewSkillModal }) => {
-  const { skills, selectedSkillId, setSelectedSkillId } = useConfig();
+  const { skills, selectedSkillId, setSelectedSkillId, deleteSkill } = useConfig();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const activeSkill = skills.find((s) => s.id === selectedSkillId) || skills[0];
+  const activeSkill = skills.find((s) => s.id === selectedSkillId) || null;
   const enabledSkills = skills.filter((s) => s.enabled);
 
   useEffect(() => {
@@ -28,18 +28,18 @@ export const SkillSelector: React.FC<Props> = ({ onOpenNewSkillModal }) => {
       <button
         className="popover-trigger"
         onClick={() => setOpen(!open)}
-        title={activeSkill ? `Skill: ${activeSkill.name}` : 'Pilih Skill'}
+        title={activeSkill ? `Skill: ${activeSkill.name}` : 'Agent AI (Tanpa Skill)'}
         style={{ gap: '6px' }}
       >
-        <span>{activeSkill?.icon || '✦'}</span>
+        <span>{activeSkill?.icon || '🤖'}</span>
         <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {activeSkill?.name || 'Pilih Skill'}
+          {activeSkill?.name || 'Tanpa Skill'}
         </span>
         <span style={{ fontSize: '10px' }}>▾</span>
       </button>
 
       {open && (
-        <div className="popover" style={{ minWidth: '300px', maxWidth: '380px' }}>
+        <div className="popover" style={{ minWidth: '320px', maxWidth: '380px' }}>
           <div style={{ padding: '6px 8px 8px', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
               Pilih Active Skill ({enabledSkills.length})
@@ -60,7 +60,60 @@ export const SkillSelector: React.FC<Props> = ({ onOpenNewSkillModal }) => {
             </button>
           </div>
 
-          <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+            {/* Opsi Tanpa Skill / Agent AI Murni */}
+            <div
+              className={`popover-item ${selectedSkillId === null ? 'selected' : ''}`}
+              onClick={() => {
+                setSelectedSkillId(null);
+                setOpen(false);
+              }}
+              style={{ padding: '10px' }}
+            >
+              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>🤖</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  className="popover-item-name"
+                  style={{
+                    fontWeight: selectedSkillId === null ? 600 : 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>Tanpa Skill (Agent AI Murni)</span>
+                  <span
+                    style={{
+                      fontSize: '0.625rem',
+                      padding: '1px 5px',
+                      borderRadius: 'var(--radius-full)',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      color: 'var(--accent-success)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Default
+                  </span>
+                </div>
+                <div
+                  className="popover-item-desc"
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    marginTop: '2px',
+                  }}
+                >
+                  Chat langsung diteruskan ke Agent AI tanpa batasan persona
+                </div>
+              </div>
+              {selectedSkillId === null && (
+                <span className="popover-item-check" style={{ marginLeft: '6px' }}>✓</span>
+              )}
+            </div>
+
+            <div style={{ height: '1px', background: 'var(--border-secondary)', margin: '4px 8px' }} />
+
             {enabledSkills.map((skill) => (
               <div
                 key={skill.id}
@@ -111,9 +164,42 @@ export const SkillSelector: React.FC<Props> = ({ onOpenNewSkillModal }) => {
                     </div>
                   )}
                 </div>
-                {skill.id === selectedSkillId && (
-                  <span className="popover-item-check" style={{ marginLeft: '6px' }}>✓</span>
-                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
+                  {skill.id === selectedSkillId && (
+                    <span className="popover-item-check">✓</span>
+                  )}
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-tertiary)',
+                      cursor: 'pointer',
+                      padding: '4px 6px',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.75rem',
+                      lineHeight: 1,
+                      transition: 'all 0.15s ease',
+                    }}
+                    title={`Hapus skill "${skill.name}"`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Hapus skill "${skill.name}"?`)) {
+                        deleteSkill(skill.id);
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--accent-error)';
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-tertiary)';
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    🗑
+                  </button>
+                </div>
               </div>
             ))}
           </div>

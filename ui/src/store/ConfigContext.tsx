@@ -5,7 +5,7 @@ import { mockMCPTools } from '../lib/mock/mcp';
 import { mockIntents } from '../lib/mock/intents';
 import { loadApiConfiguration, saveApiConfiguration as saveConfig } from '../lib/api/config';
 import { getModels } from '../lib/api/models';
-import { loadSkills, saveSkills, createSkill } from '../lib/api/skills';
+import { loadSkills, saveSkills, createSkill, resetSkillsToDefault } from '../lib/api/skills';
 import { loadMCPServers, saveMCPServers, createMCPServer } from '../lib/api/mcp';
 
 interface ConfigContextValue {
@@ -26,6 +26,7 @@ interface ConfigContextValue {
   addSkill: (input: Omit<Skill, 'id' | 'createdAt' | 'updatedAt' | 'isCustom'>) => Skill;
   updateSkill: (id: string, patch: Partial<Skill>) => void;
   deleteSkill: (id: string) => void;
+  resetSkills: () => void;
   toggleSkillEnabled: (id: string) => void;
   skillsModalOpen: boolean;
   setSkillsModalOpen: (open: boolean) => void;
@@ -100,7 +101,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   // Skills state
   const [skills, setSkills] = useState<Skill[]>(loadSkills);
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>('general-assistant');
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [skillsModalOpen, setSkillsModalOpen] = useState(false);
 
   // MCP Servers state (Multiple MCPs)
@@ -187,10 +188,16 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         saveSkills(next);
         return next;
       });
-      setSelectedSkillId((prev) => (prev === id ? 'general-assistant' : prev));
+      setSelectedSkillId((prev) => (prev === id ? null : prev));
     },
     []
   );
+
+  const resetSkills = useCallback(() => {
+    const defs = resetSkillsToDefault();
+    setSkills(defs);
+    setSelectedSkillId(null);
+  }, []);
 
   const toggleSkillEnabled = useCallback((id: string) => {
     setSkills((prev) => {
@@ -301,6 +308,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     addSkill,
     updateSkill,
     deleteSkill,
+    resetSkills,
     toggleSkillEnabled,
     skillsModalOpen,
     setSkillsModalOpen,
